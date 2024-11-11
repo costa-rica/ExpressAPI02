@@ -24,3 +24,9 @@ domain: "expressapi02.dashanddata.com/areWeRunning"
 const fileUpload = require("express-fileupload");
 app.use(fileUpload());
 ```
+
+## sending to cloudinary
+
+1. install `yarn add cloudinary`
+2. add environment var: `CLOUDINARY_URL=cloudinary://<your_api_key>:<your_api_secret>@dezjc7aqc`
+3. import to file in route using cloudinary `const cloudinary = require("cloudinary").v2;`

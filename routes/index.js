@@ -3,6 +3,7 @@ var router = express.Router();
 const os = require("os");
 const fs = require("fs");
 const path = require("path");
+const cloudinary = require("cloudinary").v2;
 
 /* GET home page. */
 router.get("/", function (req, res, next) {
@@ -98,6 +99,48 @@ router.post("/receiveImage", async (req, res) => {
 
   const resultMove = await req.files.photoFromFront.mv(filePath);
   return res.json({ result: true, message: "image saved" });
+});
+
+router.post("/receiveImageToCloudinary", async (req, res) => {
+  console.log("- in POST /receiveImageToCloudinary");
+
+  if (!req.files?.photoFromFront) {
+    return res.json({ result: false, message: "no file" });
+  }
+  console.log(
+    "req.files?.photoFromFront.name: ",
+    req.files?.photoFromFront.name
+  );
+
+  const filePathImage = path.join(process.env.PROJECT_RESOURCES, "/images"); // Update the path accordingly
+
+  if (!fs.existsSync(filePathImage)) {
+    fs.mkdirSync(filePathImage, { recursive: true });
+    console.log(`Folder created at: ${filePathImage}`);
+  } else {
+    console.log(`Folder already exists at: ${filePathImage}`);
+  }
+  const file = req.files.photoFromFront;
+  const filePath = path.join(filePathImage, file.name);
+
+  const resultMove = await req.files.photoFromFront.mv(filePath);
+
+  if (!resultMove) {
+    // on s'attendre que resultMove est undefinied
+    const resultCloudinary = await cloudinary.uploader.upload(filePath);
+
+    fs.unlinkSync(filePath);
+
+    console.log(`resultCloudinary.secure_url: ${resultCloudinary.secure_url}`);
+
+    return res.json({
+      result: true,
+      message: "image saved and sent to cloudinary",
+      url: resultCloudinary.secure_url,
+    });
+  } else {
+    return res.json({ result: false, error: resultCopy });
+  }
 });
 
 module.exports = router;
